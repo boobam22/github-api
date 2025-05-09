@@ -1,0 +1,29 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: build
+      run: |
+        chmod u+x build.sh
+        ./build.sh
+
+    - name: release
+      run: |
+        sed -n "/^## \[$GITHUB_REF_NAME\]/,/^##/p" CHANGELOG.md | head -n -1 > changelog.txt
+        gh release create $GITHUB_REF_NAME --notes-file changelog.txt dist/*
+      env:
+        GH_TOKEN: ${{ github.token }}
